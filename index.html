@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doctors Directory</title>
+  <style>
+    :root {
+      --bg: #f3f5f9; --card: #ffffff; --text: #162033; --muted: #6b7385; --line: #e4e8ef;
+      --blob1: #7aa7ff; --blob2: #f59ac0; --blob3: #6fe0c1; --blob-o: .45;
+      --wa: #25d366; --wa-text: #063d1e;
+      --shadow: 0 1px 2px rgba(16,24,40,.06), 0 10px 24px -14px rgba(16,24,40,.22);
+      --ease: cubic-bezier(.2,.8,.2,1); --bounce: cubic-bezier(.3,1.5,.5,1);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1017; --card: #171b24; --text: #e9ecf2; --muted: #9aa2b1; --line: #262c38;
+        --blob-o: .18; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 24px -14px rgba(0,0,0,.7);
+      }
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body { font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; min-height: 100vh; overflow-x: hidden; }
+    button { font: inherit; color: inherit; }
+    .ico { display: block; width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+    [hidden] { display: none !important; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    @keyframes pop    { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
+    @keyframes tileIn { from { opacity: 0; transform: translateY(28px) scale(.92); } to { opacity: 1; transform: none; } }
+    @keyframes slideIn{ from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+    @keyframes shine  { to { transform: translateX(130%); } }
+    @keyframes spin   { to { transform: rotate(360deg); } }
+    @keyframes wiggle { 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+    @keyframes beat   { 0% { stroke-dashoffset: 1; } 45%, 65% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -1; } }
+    @keyframes letterIn { from { opacity: 0; transform: translateY(-24px) rotate(-12deg) scale(.6); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+    @keyframes textIn { from { opacity: 0; transform: translateX(-14px); } }
+    @keyframes float  { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-4px) rotate(-6deg); } }
+    @keyframes heart  { 0%, 45%, 100% { transform: scale(1); } 12% { transform: scale(1.16); } 24% { transform: scale(1); } 34% { transform: scale(1.09); } }
+    @keyframes ring   { 0%, 80%, 100% { transform: rotate(0); } 84% { transform: rotate(-18deg); } 88% { transform: rotate(15deg); } 92% { transform: rotate(-9deg); } 96% { transform: rotate(5deg); } }
+    @keyframes avatarIn { from { opacity: 0; transform: scale(.3) rotate(-45deg); } to { opacity: 1; transform: none; } }
+    @keyframes barGrow { from { transform: scaleX(0); } }
+    @keyframes shimmer { to { background-position: 200% center; } }
+    @keyframes blink  { 50% { opacity: 0; } }
+    @keyframes drift  {
+      0%   { transform: translate(0, 0) scale(1); }
+      50%  { transform: translate(40px, 30px) scale(1.12); }
+      100% { transform: translate(-30px, 50px) scale(.95); }
+    }
+
+    /* Soft moving colours in the background */
+    .bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .blob { position: absolute; width: 320px; height: 320px; border-radius: 50%; filter: blur(70px); opacity: var(--blob-o); animation: drift 18s ease-in-out infinite alternate; }
+    .b1 { background: var(--blob1); top: -120px; left: -100px; }
+    .b2 { background: var(--blob2); top: 35%; right: -150px; animation-duration: 22s; animation-delay: -6s; }
+    .b3 { background: var(--blob3); bottom: -150px; left: 5%; animation-duration: 26s; animation-delay: -12s; }
+
+    /* ---------- Home: departments ---------- */
+    .hero { position: relative; text-align: center; padding: 44px 0 26px; }
+    .logo {
+      width: 66px; height: 66px; margin: 0 auto 14px; border-radius: 20px; display: grid; place-items: center; color: #fff;
+      background: linear-gradient(135deg, #4f8df7, #c84fd8); box-shadow: 0 14px 30px -12px rgba(110,80,230,.65);
+      animation: pop .6s var(--bounce) backwards;
+    }
+    .logo .ico { width: 36px; height: 36px; animation: heart 2.4s ease-in-out 1s infinite; }
+    .logo .pulse { stroke-dasharray: 1; stroke-dashoffset: 1; animation: beat 2.4s ease-in-out .6s infinite; }
+    h1 { font-size: 27px; letter-spacing: -.02em; margin: 0; }
+    h1 .l { display: inline-block; animation: letterIn .6s var(--bounce) backwards; animation-delay: calc(var(--l) * 35ms + 200ms); }
+    .title-bar {
+      display: block; width: 64px; height: 4px; margin: 10px auto 0; border-radius: 4px;
+      background: linear-gradient(90deg, #4f8df7, #c84fd8, #f7657d, #22c39d, #4f8df7); background-size: 200% auto;
+      animation: barGrow .7s .85s var(--ease) backwards, shimmer 4s linear infinite;
+    }
+    .hero p { margin: 10px 0 0; color: var(--muted); min-height: 1.45em; }
+    .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: currentColor; animation: blink 1s step-end infinite; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .credit { text-align: center; padding: 22px 0 36px; font-size: 13px; color: var(--muted); animation: fadeUp .7s 1.3s var(--ease) backwards; }
+    .credit b {
+      font-weight: 700; background: linear-gradient(90deg, #4f8df7, #c84fd8, #f7657d, #4f8df7); background-size: 200% auto;
+      -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 4s linear infinite;
+    }
+    .tile {
+      position: relative; overflow: hidden; text-align: left; border: 0; border-radius: 24px; padding: 18px;
+      min-height: 158px; cursor: pointer; color: #fff; display: flex; flex-direction: column; justify-content: space-between;
+      background: linear-gradient(140deg, var(--g1), var(--g2)); box-shadow: 0 16px 30px -16px var(--g2);
+      animation: tileIn .7s var(--ease) backwards; animation-delay: calc(var(--i) * 90ms + 250ms);
+      transition: transform .25s var(--ease), box-shadow .25s var(--ease);
+    }
+    .tile:hover { transform: translateY(-4px); box-shadow: 0 22px 34px -16px var(--g2); }
+    .tile:active { transform: scale(.96); }
+    .tile::after {
+      content: ""; position: absolute; width: 150px; height: 150px; border-radius: 50%;
+      background: rgba(255,255,255,.14); right: -55px; bottom: -65px; transition: transform .5s var(--ease);
+    }
+    .tile:hover::after { transform: scale(1.25); }
+    .tile::before {
+      content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; transform: translateX(-130%);
+      background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,.38) 50%, transparent 70%);
+      animation: shine 1.1s ease-out; animation-delay: calc(var(--i) * 90ms + 850ms);
+    }
+    .tile > * { position: relative; z-index: 1; }
+    .tile-icon {
+      width: 48px; height: 48px; border-radius: 15px; background: rgba(255,255,255,.22); display: grid; place-items: center;
+      animation: pop .5s var(--bounce) backwards; animation-delay: calc(var(--i) * 90ms + 550ms);
+    }
+    .tile-icon .ico { animation: float 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * -.8s); }
+    .tile:hover .tile-icon .ico { animation: wiggle .6s ease; }
+    .tile-name {
+      display: block; font-size: 19px; font-weight: 700; letter-spacing: -.01em;
+      animation: textIn .5s var(--ease) backwards; animation-delay: calc(var(--i) * 90ms + 600ms);
+    }
+    .tile-count {
+      display: block; font-size: 13px; opacity: .92;
+      animation: textIn .5s var(--ease) backwards; animation-delay: calc(var(--i) * 90ms + 720ms);
+    }
+    .returning .tile { animation-delay: calc(var(--i) * 45ms); }
+    .returning .tile::before, .returning .logo, .returning h1 .l, .returning .credit,
+    .returning .tile-name, .returning .tile-count { animation: none; }
+    .returning .title-bar { animation: shimmer 4s linear infinite; }
+    .returning .tile-icon { animation-delay: calc(var(--i) * 45ms + 200ms); }
+
+    /* ---------- Department: doctors list ---------- */
+    #dept { animation: slideIn .45s var(--ease) backwards; }
+    .band {
+      position: relative; overflow: hidden; color: #fff; padding: 18px 0 50px;
+      background: linear-gradient(140deg, var(--g1), var(--g2)); border-radius: 0 0 30px 30px;
+    }
+    .band::after {
+      content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%;
+      background: rgba(255,255,255,.12); right: -60px; top: -90px;
+    }
+    .band .wrap { position: relative; z-index: 1; display: flex; align-items: center; gap: 14px; }
+    .back {
+      flex: none; width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer; color: #fff;
+      background: rgba(255,255,255,.22); display: grid; place-items: center; transition: transform .2s var(--ease);
+    }
+    .back:active { transform: scale(.88); }
+    .band h2 { margin: 0; font-size: 24px; letter-spacing: -.01em; animation: fadeUp .5s .1s var(--ease) backwards; }
+    .band .sub { font-size: 13px; opacity: .92; animation: textIn .5s .25s var(--ease) backwards; }
+    .band-icon .ico { animation: float 3s ease-in-out .8s infinite; }
+    .band-icon {
+      margin-left: auto; flex: none; width: 52px; height: 52px; border-radius: 16px; background: rgba(255,255,255,.2);
+      display: grid; place-items: center; animation: pop .55s .2s var(--bounce) backwards;
+    }
+    .search { display: block; position: relative; margin-top: -27px; animation: fadeUp .5s .15s var(--ease) backwards; }
+    .search input {
+      width: 100%; padding: 14px 16px 14px 44px; font-size: 16px; color: var(--text); background: var(--card);
+      border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); outline: none;
+    }
+    .search input:focus { border-color: var(--g2); }
+    .search .ico { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); }
+
+    #list { padding: 16px 0 48px; }
+    .doc {
+      display: flex; align-items: center; gap: 12px; padding: 12px; margin-bottom: 10px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: var(--shadow);
+      animation: fadeUp .5s var(--ease) backwards; animation-delay: calc(var(--i) * 45ms + 150ms);
+    }
+    .no-anim .doc { animation: none; }
+    .avatar {
+      flex: none; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff;
+      background: linear-gradient(140deg, var(--g1), var(--g2)); box-shadow: 0 6px 14px -8px var(--g2);
+      animation: avatarIn .6s var(--bounce) backwards; animation-delay: calc(var(--i) * 45ms + 300ms);
+    }
+    .avatar .ico { width: 25px; height: 25px; stroke-width: 1.8; }
+    .no-anim .avatar { animation: none; }
+    .info { flex: 1; min-width: 0; }
+    .name { font-weight: 650; font-size: 16px; overflow-wrap: anywhere; }
+    .meta { font-size: 13px; color: var(--muted); }
+    .nw { white-space: nowrap; }
+    .wa {
+      flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 10px 13px; border-radius: 999px;
+      text-decoration: none; font-weight: 650; font-size: 14px; background: var(--wa); color: var(--wa-text);
+      box-shadow: 0 8px 18px -10px rgba(37,211,102,.9); transition: transform .2s var(--ease);
+    }
+    .wa:hover { transform: translateY(-2px); }
+    .wa:active { transform: scale(.92); }
+    .wa .ico { width: 18px; height: 18px; animation: ring 4s ease-in-out infinite; animation-delay: calc(var(--i) * .25s + 1.2s); }
+    .wa.off { background: var(--line); color: var(--muted); box-shadow: none; font-weight: 500; }
+    @media (max-width: 360px) { .wa span { display: none; } .wa { padding: 11px; } }
+    .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+    .note { text-align: center; font-size: 12px; color: var(--muted); padding: 8px 0 0; }
+
+    .sync { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); }
+    .sync:empty { display: none; }
+    .sync::before { content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+    .sync.on::before { background: #22c55e; animation: blink 2.4s ease-in-out infinite; }
+    .sync.off::before { background: #f59e0b; }
+    .sync.off { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+
+  <section id="home">
+    <div class="wrap">
+      <header class="hero">
+        <div class="logo">
+          <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+            <path class="pulse" pathLength="1" d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>
+          </svg>
+        </div>
+        <h1 id="title">Doctors Directory</h1>
+        <span class="title-bar" aria-hidden="true"></span>
+        <p aria-label="Choose a department"><span id="typed"></span><span class="caret" id="caret"></span></p>
+      </header>
+      <div class="grid" id="tiles"></div>
+      <footer class="credit">Prepared by <b>Yousif Rozhbayani</b><span class="sync" id="sync"></span></footer>
+    </div>
+  </section>
+
+  <section id="dept" hidden>
+    <div class="band">
+      <div class="wrap">
+        <button class="back" id="back" type="button" aria-label="Back"></button>
+        <div>
+          <h2 id="deptName"></h2>
+          <div class="sub" id="deptCount"></div>
+        </div>
+        <div class="band-icon" id="deptIcon"></div>
+      </div>
+    </div>
+    <div class="wrap">
+      <label class="search">
+        <span id="searchIcon"></span>
+        <input type="search" id="q" placeholder="Search name or number…" autocomplete="off">
+      </label>
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <script>
+    var ICON = {
+      steth: '<path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/>',
+      scissors: '<circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/>',
+      baby: '<path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/>',
+      users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
+      doctor: '<circle cx="12" cy="7" r="3.6"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/><path d="M12 15.6v4M10 17.6h4"/>',
+      chat: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+      back: '<path d="m15 18-6-6 6-6"/>',
+      search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'
+    };
+    function svg(name) { return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + ICON[name] + '</svg>'; }
+
+    // The four main departments, in this order. Others from the Sheet are added after them.
+    var FIXED = [
+      { key: 'Medicine',  g1: '#4f8df7', g2: '#1f4fd1', icon: 'steth' },
+      { key: 'Surgery',   g1: '#f7657d', g2: '#c41a42', icon: 'scissors' },
+      { key: 'OB/GYN',    g1: '#d26cf0', g2: '#9019ad', icon: 'baby' },
+      { key: 'Community', g1: '#22c39d', g2: '#04775c', icon: 'users' }
+    ];
+    var OTHER = { g1: '#8794ab', g2: '#475569', icon: 'plus' };
+
+    var $ = function (id) { return document.getElementById(id); };
+    var reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var startedAt = Date.now();
+    var doctors = [], loaded = false, currentKey = null;
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function deptKey(dept) {
+      var s = dept.toLowerCase();
+      if (s.indexOf('community') > -1) return 'Community';
+      if (/\bob\b|gyn|obst/.test(s)) return 'OB/GYN';
+      if (s.indexOf('surg') > -1) return 'Surgery';
+      if (s.indexOf('medic') > -1) return 'Medicine';
+      return dept;
+    }
+    function info(key) {
+      for (var i = 0; i < FIXED.length; i++) if (FIXED[i].key === key) return FIXED[i];
+      return { key: key, g1: OTHER.g1, g2: OTHER.g2, icon: OTHER.icon };
+    }
+    function plural(n) { return n === 1 ? 'doctor' : 'doctors'; }
+
+    /* ---------- Home tiles ---------- */
+    function tileHTML(d, i) {
+      return '<button type="button" class="tile" data-key="' + esc(d.key) + '" style="--g1:' + d.g1 + ';--g2:' + d.g2 + ';--i:' + i + '">' +
+        '<span class="tile-icon">' + svg(d.icon) + '</span>' +
+        '<span><span class="tile-name">' + esc(d.key) + '</span>' +
+        '<span class="tile-count"><b class="num" data-n="0">–</b> <span class="lbl">doctors</span></span></span>' +
+      '</button>';
+    }
+    function countTo(tile, to) {
+      var el = tile.querySelector('.num');
+      var from = parseInt(el.getAttribute('data-n'), 10) || 0;
+      el.setAttribute('data-n', to);
+      tile.querySelector('.lbl').textContent = plural(to);
+      var token = el._count = {};
+      if (reduced || from === to) { el.textContent = to; return; }
+      var t0 = null;
+      (function step(t) {
+        if (el._count !== token) return;   // a newer count started
+        if (!t0) t0 = t;
+        var p = Math.min(1, (t - t0) / 700), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(from + (to - from) * e);
+        if (p < 1) requestAnimationFrame(step);
+      })(performance.now());
+    }
+    var countTimer;
+    function syncTiles() {
+      var counts = {};
+      doctors.forEach(function (d) { counts[d._key] = (counts[d._key] || 0) + 1; });
+      var extras = Object.keys(counts).filter(function (k) { return info(k).g1 === OTHER.g1; }).sort();
+      var grid = $('tiles');
+
+      // remove extra tiles that are no longer in the Sheet, add new ones
+      Array.prototype.forEach.call(grid.querySelectorAll('.tile'), function (t) {
+        var k = t.getAttribute('data-key');
+        if (info(k).g1 === OTHER.g1 && extras.indexOf(k) === -1) t.remove();
+      });
+      extras.forEach(function (k, i) {
+        if (!grid.querySelector('.tile[data-key="' + CSS.escape(k) + '"]')) {
+          grid.insertAdjacentHTML('beforeend', tileHTML(info(k), FIXED.length + i));
+        }
+      });
+
+      var wait = Math.max(0, 950 - (Date.now() - startedAt));
+      clearTimeout(countTimer);
+      countTimer = setTimeout(function () {
+        Array.prototype.forEach.call(grid.querySelectorAll('.tile'), function (t) {
+          countTo(t, counts[t.getAttribute('data-key')] || 0);
+        });
+      }, wait);
+    }
+
+    /* ---------- Department list ---------- */
+    function docHTML(d, i) {
+      var meta = d.details.map(esc).join(' · ');
+      // dir="ltr" keeps the number in the right order inside Kurdish (right-to-left) cards
+      var phone = d.phone ? '<div class="meta"><span class="nw" dir="ltr">' + esc(d.phone) + '</span></div>' : '';
+      var wa = d.wa
+        ? '<a class="wa" target="_blank" rel="noopener" href="https://wa.me/' + esc(d.wa) + '">' + svg('chat') + '<span>WhatsApp</span></a>'
+        : '<span class="wa off">No number</span>';
+      // dir="auto": Kurdish/Arabic names show right-to-left, English names left-to-right
+      return '<div class="doc" dir="auto" style="--i:' + Math.min(i, 10) + '">' +
+        '<div class="avatar">' + svg('doctor') + '</div>' +
+        '<div class="info"><div class="name">' + esc(d.name) + '</div>' +
+        (meta ? '<div class="meta">' + meta + '</div>' : '') + phone + '</div>' + wa +
+      '</div>';
+    }
+    function renderList(animate) {
+      var list = $('list');
+      list.classList.toggle('no-anim', !animate);
+      if (!loaded) { $('deptCount').textContent = 'Loading…'; list.innerHTML = ''; return; }
+
+      var rows = doctors.filter(function (d) { return d._key === currentKey; });
+      $('deptCount').textContent = rows.length + ' ' + plural(rows.length);
+
+      var q = $('q').value.trim().toLowerCase(), qd = q.replace(/\D/g, '');
+      var shown = rows.filter(function (d) {
+        return !q || d._text.indexOf(q) > -1 || (qd.length >= 3 && d._digits.indexOf(qd) > -1);
+      });
+
+      if (!rows.length) list.innerHTML = '<div class="empty">No doctors here yet.</div>';
+      else if (!shown.length) list.innerHTML = '<div class="empty">No match.</div>';
+      else list.innerHTML = shown.map(docHTML).join('');
+    }
+    function openDept(key) {
+      var d = info(key);
+      currentKey = key;
+      var sec = $('dept');
+      sec.style.setProperty('--g1', d.g1);
+      sec.style.setProperty('--g2', d.g2);
+      $('deptName').textContent = key;
+      $('deptIcon').innerHTML = svg(d.icon);
+      $('q').value = '';
+      $('home').hidden = true;
+      sec.hidden = false;
+      window.scrollTo(0, 0);
+      renderList(true);
+    }
+    function goHome() {
+      $('dept').hidden = true;
+      $('home').classList.add('returning');
+      $('home').hidden = false;
+      currentKey = null;
+      window.scrollTo(0, 0);
+    }
+
+    /* ---------- Your Google Sheet (the app reads it every time it opens) ---------- */
+    // The sheet must be shared as: Share -> General access -> "Anyone with the link" -> Viewer.
+    var SHEET_LINK = 'https://docs.google.com/spreadsheets/d/1IZyTt3ubJlu8e46ecuOz9ckEN7-A7lybHRkaWdpDIQE/edit?usp=sharing';
+    var SHEET_TABS = ['Medicine', 'Surgery', 'OB-GYN', 'Community'];   // tab names in the sheet, in this order
+
+    /* ---------- Data ---------- */
+    var COUNTRY_CODE = '964';                 // Iraq: 0750 123 4567 -> 9647501234567 for WhatsApp
+
+    function findCol(keys, names) {           // exact header match first, then "contains"
+      for (var i = 0; i < names.length; i++) { var e = keys.indexOf(names[i]); if (e > -1) return e; }
+      for (i = 0; i < names.length; i++) for (var k = 0; k < keys.length; k++) if (keys[k].indexOf(names[i]) > -1) return k;
+      return -1;
+    }
+    function toWhatsApp(phone) {              // "0750...", "750...", "+964 750...", "00964...", "964 0750..." -> "964750..."
+      var s = String(phone).trim(), d = s.replace(/\D/g, '');
+      if (!d) return '';
+      var plus = s.charAt(0) === '+';
+      if (d.indexOf('00') === 0) d = d.slice(2);
+      else if (!plus && d.charAt(0) === '0') d = COUNTRY_CODE + d.slice(1);
+      else if (!plus && !(d.indexOf(COUNTRY_CODE) === 0 && d.length >= 12)) d = COUNTRY_CODE + d;
+      if (d.indexOf(COUNTRY_CODE + '0') === 0) d = COUNTRY_CODE + d.slice(COUNTRY_CODE.length + 1);
+      return d;
+    }
+    // Sheet rules: row 1 = headers, a "Name" column is needed, the tab name is the department
+    // (unless there is a "Department" column), other columns show under the name, tabs starting with "_" are skipped.
+    function parseTabs(tabs) {
+      var out = [];
+      tabs.forEach(function (t) {
+        if (String(t.name).charAt(0) === '_' || !t.rows || t.rows.length < 2) return;
+        var headers = t.rows[0].map(function (v) { return String(v == null ? '' : v).trim(); });
+        var keys = headers.map(function (v) { return v.toLowerCase(); });
+        var col = {
+          name: findCol(keys, ['name', 'doctor name', 'full name', 'doctor']),
+          dept: findCol(keys, ['department', 'dept']),
+          phone: findCol(keys, ['phone', 'mobile', 'telephone', 'tel', 'whatsapp']),
+          wa: findCol(keys, ['whatsapp'])
+        };
+        if (col.name === -1) return;
+        var used = [col.name, col.dept, col.phone, col.wa];
+        for (var r = 1; r < t.rows.length; r++) {
+          var row = (t.rows[r] || []).map(function (v) { return String(v == null ? '' : v).trim(); });
+          var name = row[col.name] || '';
+          if (!name) continue;
+          var details = [];
+          headers.forEach(function (h, c) { if (used.indexOf(c) === -1 && h && row[c] && !/mail/i.test(h)) details.push(row[c]); });
+          var phone = col.phone > -1 ? (row[col.phone] || '') : '';
+          out.push({ name: name, dept: (col.dept > -1 && row[col.dept]) || String(t.name), phone: phone,
+                     wa: toWhatsApp((col.wa > -1 && row[col.wa]) || phone), details: details });
+        }
+      });
+      return out;
+    }
+    function setData(tabs) {
+      var first = !loaded;
+      doctors = parseTabs(tabs).map(function (d) {
+        d._key = deptKey(d.dept);
+        d._text = [d.name, d.phone].concat(d.details).join(' ').toLowerCase();
+        d._digits = d.phone.replace(/\D/g, '');
+        return d;
+      });
+      loaded = true;
+      currentTabs = tabs;
+      syncTiles();
+      if (currentKey) renderList(first);
+    }
+    var CACHE = 'doctors-directory-sheet-v1';  // last list read from the sheet, for when there is no internet
+    var currentTabs = [], lastSync = 0, lastJSON = '';
+
+    // Reads one tab with a <script> tag (works even when this page is opened as a file).
+    var jsonpN = 0;
+    function readTab(id, tab) {
+      return new Promise(function (ok) {
+        var cb = '__doctorsSheet' + (++jsonpN), s = document.createElement('script'), timer;
+        function done(val) { window[cb] = function () {}; clearTimeout(timer); s.remove(); ok(val); }
+        timer = setTimeout(function () { done(null); }, 20000);   // slow mobile internet
+        window[cb] = function (res) {
+          if (!res || res.status !== 'ok' || !res.table) return done(null);
+          var rows = [res.table.cols.map(function (c) { return c.label || ''; })];
+          (res.table.rows || []).forEach(function (r) {
+            rows.push((r.c || []).map(function (cell) {
+              return cell ? String(cell.f != null ? cell.f : (cell.v != null ? cell.v : '')) : '';
+            }));
+          });
+          done({ name: tab, rows: rows });
+        };
+        s.onerror = function () { done(null); };
+        s.src = 'https://docs.google.com/spreadsheets/d/' + id + '/gviz/tq?tqx=out:json;responseHandler:' + cb +
+                '&headers=1&sheet=' + encodeURIComponent(tab) + '&t=' + Date.now();
+        document.head.appendChild(s);
+      });
+    }
+    function setStatus(ok) {
+      var s = $('sync');
+      s.className = 'sync ' + (ok ? 'on' : 'off');
+      s.textContent = ok ? 'Connected to Google Sheet' : 'No connection · showing the last saved list · tap to try again';
+    }
+    function syncSheet(attempt) {
+      attempt = attempt || 0;
+      var m = SHEET_LINK.match(/\/d\/([\w-]+)/);
+      if (!m) return;
+      lastSync = Date.now();
+      Promise.all(SHEET_TABS.map(function (tab) { return readTab(m[1], tab); })).then(function (got) {
+        // Google sends the first tab when a tab name is not found: treat that as "not found".
+        var first = got[0] && JSON.stringify(got[0].rows);
+        var ok = got.filter(function (t, i) { return t && (i === 0 || JSON.stringify(t.rows) !== first); });
+        if (!ok.length || !parseTabs(ok).length) {
+          if (attempt < 2) setTimeout(function () { syncSheet(attempt + 1); }, 3000);   // try 3 times in total
+          else setStatus(false);
+          return;
+        }
+        // Keep the last known doctors for any tab that could not be read this time.
+        var tabs = SHEET_TABS.map(function (name) {
+          var live = ok.filter(function (t) { return t.name === name; })[0];
+          return live || currentTabs.filter(function (t) { return t.name === name; })[0];
+        }).filter(Boolean);
+        var json = JSON.stringify(tabs);
+        if (json !== lastJSON) {
+          lastJSON = json;
+          setData(tabs);
+          try { localStorage.setItem(CACHE, json); } catch (e) {}
+        }
+        setStatus(true);
+      });
+    }
+    function load() {
+      var cached = null;
+      try { cached = JSON.parse(localStorage.getItem(CACHE)); } catch (e) {}
+      setData(SHEET_LINK && cached && cached.length ? cached : BUILT_IN);
+      syncSheet();
+    }
+
+    /* ---------- Start ---------- */
+    // Title drops in letter by letter, then the subtitle types itself.
+    (function () {
+      var h = $('title'), text = h.textContent;
+      h.setAttribute('aria-label', text);
+      h.innerHTML = text.split('').map(function (c, i) {
+        return '<span class="l" aria-hidden="true" style="--l:' + i + '">' + (c === ' ' ? '&nbsp;' : esc(c)) + '</span>';
+      }).join('');
+      var sub = 'Choose a department', out = $('typed'), caret = $('caret'), n = 0;
+      if (reduced) { out.textContent = sub; caret.remove(); return; }
+      setTimeout(function type() {
+        out.textContent = sub.slice(0, ++n);
+        if (n < sub.length) setTimeout(type, 45);
+        else setTimeout(function () { caret.remove(); }, 1600);
+      }, 900);
+    })();
+
+    $('back').innerHTML = svg('back');
+    $('searchIcon').innerHTML = svg('search');
+    $('tiles').innerHTML = FIXED.map(tileHTML).join('');
+
+    $('tiles').addEventListener('click', function (e) {
+      var t = e.target.closest('.tile');
+      if (t) openDept(t.getAttribute('data-key'));
+    });
+    $('back').addEventListener('click', goHome);
+    $('q').addEventListener('input', function () { renderList(false); });
+    // Tap "No connection" to try again.
+    $('sync').addEventListener('click', function () {
+      if (!this.classList.contains('off')) return;
+      this.className = 'sync'; this.textContent = 'Connecting…';
+      syncSheet();
+    });
+    // Coming back to the app re-reads the sheet, so new changes appear.
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && Date.now() - lastSync > 30000) syncSheet();
+    });
+
+    // The doctors list (made from Doctors.xlsx).
+    var BUILT_IN = [{"name":"Medicine","rows":[["Name","Position","Phone"],["Dr. Azad Anwer","Head of Medicine","0750 432 3247"],["Dr. Yahya","Coordinator of Medicine for All Stages","0750 432 3071"],["Dr. Salam","Coordinator of Medicine for Stage 4","0750 497 2628"],["Dr. Nishtman","","0750 405 4430"],["Dr. Gaylan","","0775 286 7005"],["Dr. Zahir Xoshnaw","","0750 456 5807"],["Dr. Jasm","","0750 409 0365"],["Dr. Isra Hamawandi","","0750 470 3527"],["Dr. Mudhafar","","0750 445 8812"],["Dr. Mariwan Saka","","0776 772 2270"],["Dr. Arin Nasir","","0750 449 9176"],["Dr. Pshtiwan","","0750 462 4377"],["Dr. Luqman","","0750 440 0539"],["Dr. Haidar","","0750 921 9696"],["Dr. Mazyar Jabbar","","0750 458 1249"],["Dr. Abdulsatr","","0750 452 1267"],["Dr. Mohammed Sadraden","","0750 781 4946"],["Dr. Altun","","0750 473 4015"],["Dr. Elliot","","0750 731 4903"],["Dr. Ibrahim Bilal","","0750 340 9235"],["Dr. Sharyar","","0775 165 1905"],["Dr. Nasih","","0750 454 4564"],["Dr. Sanger","","0750 477 3646"],["Dr. Mohammed Omer","","0750 483 5511"],["Dr. Salah Snjari","","0750 373 4134"],["Dr. Dashti Bustani","","0750 445 1993"],["Dr. Ari Omer","","0750 466 9386"]]},{"name":"Surgery","rows":[["Name","Position","Unit","Phone"],["د. بدرخان سعید احمد","پرۆفیسۆر · سەرۆکی لقی نەشتەرگەری","نەشتەرگەری گشتی","0750 449 1528"],["د. امانج جلال نامق احمد","پرۆفیسۆری یاریدەدەر · بڕیاریدەدەری لقی نەشتەرگەری","نەشتەرگەری گشتی","0750 460 4065"],["د. رەوەند مشیر فیض الله حوێزی","پرۆفیسۆر","نەشتەرگەری گشتی","0750 446 4548"],["د. ئەژی محمد دیوانە محمد امین","پرۆفیسۆری یاریدەدەر · بەرپرسیی هۆبەی نەشتەرگەری","نەشتەرگەری گشتی","0750 448 2305"],["د. احمد عبدالقادر بابان","پرۆفیسۆری یاریدەدەر","نەشتەرگەری گشتی","0750 448 2185"],["د. بەڵین صلاح الدین محمد","پرۆفیسۆری یاریدەدەر","نەشتەرگەری گشتی","0750 445 8770"],["د. صباح جلال شریف","پرۆفیسۆری یاریدەدەر","نەشتەرگەری گشتی","0750 448 6986"],["د. بوتان عبدالقادر علی","مامۆستا","نەشتەرگەری گشتی","0750 466 6877"],["د. شێروان احمد عزیز گەرۆتە","مامۆستا","نەشتەرگەری گشتی","0750 445 2637"],["د. سرهنگ حسین محمد عبدالله","مامۆستا","نەشتەرگەری گشتی","0751 733 2343"],["د. نیان محمد اسعد","مامۆستا","نەشتەرگەری گشتی","0750 446 0173"],["د. هەڤاڵ صابر فقێ سمایل","مامۆستا","نەشتەرگەری گشتی","0750 451 9070"],["د. شیرکۆ عباس نادر","مامۆستا","نەشتەرگەری گشتی","0750 455 6994"],["د. سازگار خالد ابراهیم","مامۆستا","نەشتەرگەری گشتی","0750 460 3246"],["د. ئەژین عبدالستار محمد رسول","مامۆستا · قوتابی بۆردی کوردستانی","نەشتەرگەری گشتی","0750 451 4499"],["د. دلشاد حمد مصطفی","مامۆستا","نەشتەرگەری گشتی","0750 448 2142"],["د. ندی عیسی حسین عبدالله","مامۆستا","نەشتەرگەری گشتی","0750 488 5073"],["د. اڤین جوهر رزگۆ روێل","مامۆستای یاریدەدەر","نەشتەرگەری گشتی","0750 449 4648"],["د. شیروان احمد علی هەمەوەندی","پرۆفیسۆر · لێپرسراوی هۆبەی ئێسک و شکان","نەشتەرگەری ئێسک و شکان","0750 445 7521"],["د. زینب عبد الوهاب محمد","پرۆفیسۆری یاریدەدەر","نەشتەرگەری ئێسک و شکان","0750 471 5980"],["د. عبدالقادر محمد سلیمان ئالانی","پرۆفیسۆری یاریدەدەر","نەشتەرگەری ئێسک و شکان","0750 494 3185"],["د. بێریڤان ابراهیم جمال","مامۆستا","نەشتەرگەری ئێسک و شکان","0750 411 8388"],["د. ڕێبین طه صالح","مامۆستا","نەشتەرگەری ئێسک و شکان","0750 453 0601"],["د. شونم ناصح داود","پرۆفیسۆری یاریدەدەر · لێپرسراوی هۆبە","تیشک و سۆنار","0750 470 1688"],["د. سمیعە عبدالرحمن رشید","پرۆفیسۆر","تیشک و سۆنار","0750 496 5127"],["د. میدیا غازی صدیق","پرۆفیسۆری یاریدەدەر","تیشک و سۆنار","0750 463 0933"],["د. ئاسکە فاروق جمال","پرۆفیسۆری یاریدەدەر","تیشک و سۆنار","0750 387 5555"],["د. هڤین عزۆ محمد امین","پرۆفیسۆری یاریدەدەر","تیشک و سۆنار","0750 131 2000"],["د. صلاح محمد عبدالرحمن","پرۆفیسۆری یاریدەدەر","تیشک و سۆنار","0750 466 9755"],["د. کتایون ناظم خورشید","مامۆستا","تیشک و سۆنار","0750 447 0235"],["د. اراز رفیق عبدالله","مامۆستا","تیشک و سۆنار","0750 490 7603"],["د. ادریس جرجیس احمد","مامۆستا","تیشک و سۆنار","0750 448 5685"],["د. دلدار عبدالرحمن صالح","مامۆستا","تیشک و سۆنار","0750 460 0558"],["د. ایناس درید نورالدین","مامۆستا","تیشک و سۆنار","0750 482 8625"],["د. ئالا عمر صالح عبدول","مامۆستا","تیشک و سۆنار","0750 494 7772"],["د. احمد عبدالجبار عمر","مامۆستا · لێپرسراوی هۆبەی مێشک و بڕبڕەی پشت","نەشتەرگەری مێشک و بڕبڕەی پشت","0750 447 5278"],["د. انجام ابراهیم سلیمان","پرۆفیسۆر","نەشتەرگەری مێشک و بڕبڕەی پشت","0750 325 5000"],["د. نورالدین حمد محمد","مامۆستا","نەشتەرگەری مێشک و بڕبڕەی پشت","0772 445 0088"],["د. علی موسی خلیل ابراهیم","مامۆستا","نەشتەرگەری مێشک و بڕبڕەی پشت","0750 764 8313"],["د. عبدالخالق کریم محمد امین","پرۆفیسۆر · لێپرسراوی هۆبەی قورگ و گوێ و لووت","نەشتەرگەری قورگ و گوێ و لووت","0750 481 9392"],["د. میسر عبدالرحمن یاسین","پرۆفیسۆری یاریدەدەر","نەشتەرگەری قورگ و گوێ و لووت","0750 453 4736"],["د. ارسلان عولا مصطفی","پرۆفیسۆری یاریدەدەر","نەشتەرگەری قورگ و گوێ و لووت","0750 451 1789"],["د. لانە عبدالرزاق شهاب","پرۆفیسۆری یاریدەدەر","نەشتەرگەری قورگ و گوێ و لووت","0750 445 6683"],["د. شمال خورشید حسین","مامۆستا","نەشتەرگەری قورگ و گوێ و لووت","0750 464 8879"],["د. حنا حنانو قشو","مامۆستا","نەشتەرگەری قورگ و گوێ و لووت","0750 457 0550"],["د. نهاد رفعت جواد","پرۆفیسۆری یاریدەدەر · لێپرسراوی هۆبەی میزەڕۆ","نەشتەرگەری میزەڕۆ","0750 403 5247"],["د. پشتیوان هاشم سعید الالبزاز","پرۆفیسۆر","نەشتەرگەری میزەڕۆ","0750 451 2932"],["د. مازن یونس محمد","پرۆفیسۆری یاریدەدەر","نەشتەرگەری میزەڕۆ","0750 453 4721"],["د. طارق عزیز توما","پرۆفیسۆری یاریدەدەر","نەشتەرگەری میزەڕۆ","0750 453 8233"],["د. میسر کریم موسی","مامۆستا","نەشتەرگەری میزەڕۆ","0770 173 2466"],["د. اکرم محمد محمود","پرۆفیسۆری یاریدەدەر","نەشتەرگەری میزەڕۆ","0750 464 0139"],["د. هەست کریم علی محمد","مامۆستا","نەشتەرگەری میزەڕۆ","0750 447 2596"],["د. دزڤان نزیر احمد","مامۆستا","نەشتەرگەری میزەڕۆ","0750 449 7686"],["د. یونس حسین رحمان دزەیی","مامۆستای یاریدەدەر · قوتابی دکتۆرا مۆڵەت","نەشتەرگەری میزەڕۆ","0750 445 9621"],["د. بشار حنا عازر","مامۆستا · لێپرسراوی هۆبەی دەمار و دڵ","نەشتەرگەری دەمار و دڵ","0750 485 6958"],["د. اسو ابراهیم عزت","مامۆستا","نەشتەرگەری دەمار و دڵ","0750 445 3390"],["د. چالاک عبدالصمد","مامۆستا","نەشتەرگەری دەمار و دڵ","0750 454 1045"],["د. هەڤاڵ لطف الله صدرالدین","","نەشتەرگەری دەمار و دڵ","0750 454 0857"],["د. احمد اسماعیل عبدالغنی","پرۆفیسۆری یاریدەدەر","نەشتەرگەری چاو","0750 316 3156"],["د. احمد کریم جمعە","پرۆفیسۆری یاریدەدەر","نەشتەرگەری چاو","0750 735 4948"],["د. بێستون عمر صالح","مامۆستا","نەشتەرگەری چاو","0750 711 0110"],["د. جلال حمە صالح فتاح","پرۆفیسۆر · لێپرسراوی هۆبەی جوانکاری","نەشتەرگەری جوانکاری","0750 462 7251"],["د. صابر عثمان مصطفی","پرۆفیسۆری یاریدەدەر","نەشتەرگەری جوانکاری","0750 463 7580"],["د. عثمان عصمت عبدالمجید","پرۆفیسۆری یاریدەدەر · لێپرسراوی هۆبەی سڕکردن","سڕکردن","0750 766 4790"],["د. فرمان یاسین","بۆرد · مامۆستای وانەبێژ","نەشتەرگەری گشتی","0750 754 5464"],["د. مهند محمد ابراهیم","بۆرد · مامۆستای وانەبێژ","نەشتەرگەری گشتی","0750 464 9349"],["د. بروا قاسم","بۆرد · مامۆستای وانەبێژ","نەشتەرگەری گشتی","0750 449 7647"]]},{"name":"OB-GYN","rows":[["Name","Position","Phone"],["د. ڕۆژان خالص جواد","","0750 370 9000"],["د. کزنک کاکل عزیز","","0750 449 4732"],["د. شهلاء کریم محمود العلاف","","0750 448 0711"],["د. غادە سعدالله سلێمان","","0750 758 9286"],["د. زینب محسن زوین","","0750 828 2187"],["د. اشراق محمود شاکر","","0750 490 0050"],["د. کامیلیا بویا شابو","","0750 445 1733"],["د. ئەڤین صادق جمیل عبدالصمد","","0750 453 3508"],["د. چیمەن خضر مولود امین","","0750 321 4212"],["د. شیلان عمر جعفر","","0750 444 1546"],["د. نغم یونس الحر","","0770 786 4986"],["د. سمیرە عبدالرحمن مصطفی","","0750 446 6637"],["د. خەندە یاسین أحمد","","0750 455 9167"],["د. ڕاژان نەژاد مصطفی","","0750 449 3828"],["د. رۆز برهان الدین محمد امین","","0750 466 1240"],["د. أفان عبدالرحمن صوفی","","0750 460 2033"],["د. شیماء عبد عزت","","0750 460 9406"],["د. پەرێز رضا محمد رسول","","0750 472 9033"],["د. تارا علی عثمان","","0750 554 5437"],["د. ئەڤین سلیم حسین","","0750 456 2944"],["د. میللەت حاجی إسماعیل","","0750 453 2862"],["د. لاڤە طلعت شریف","","0751 058 5996"],["د. شۆخان منصور عبدالله","","0750 455 7587"]]},{"name":"Community","rows":[["Name","Position","Phone"],["Dr. Samir","Head of Community","0750 448 8891"],["Dr. Nazleen","Coordinator of Community","0750 470 4277"],["Dr. Sherad Ali","","0750 475 1579"],["Dr. Sherzad Abdulhad","","0750 445 1828"],["Dr. Roniya","","0750 751 5631"],["Dr. Nareen","","0750 496 4277"],["Dr. Kamaran","","0750 455 7194"],["Dr. Lara","","0750 452 9306"],["Dr. Maaroof","","0750 461 5464"],["Dr. Shayda","","0750 461 7236"],["Dr. Ronak","","0750 496 4534"],["Dr. Banaz","Head of Psychology","0750 499 1565"],["Dr. Mahmood","Coordinator of Psychology","0750 471 9414"],["Dr. Nasraw","","0750 472 0157"],["Dr. Dyar","Psychology","0750 451 3063"],["Dr. Haidar","","0750 921 9696"],["Dr. Dyar Mustafa","PPD","0750 497 4335"],["Dr. Shawnm","","0750 470 1688"],["Dr. Soran Ahmed","","0750 463 9276"],["Dr. Hemn","","0750 451 2272"],["Dr. Dilman","Head of Forensic","0750 494 6012"],["Dr. Faysal","","0750 475 0225"]]}];
+
+    load();
+  </script>
+</body>
+</html>
